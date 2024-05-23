@@ -1,14 +1,38 @@
+/**
+ * Copyright 2024 autumo GmbH, Michael Gasche.
+ * All Rights Reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of autumo GmbH The intellectual and technical
+ * concepts contained herein are proprietary to autumo GmbH
+ * and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from autumo GmbH.
+ *
+ */
+
+
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { View, Text } from "react-native";
+import { Stack } from 'expo-router';
 
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
+
   const colorScheme = useColorScheme();
 
   return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" options={{title: 'ifaceX'}} />
+    </Stack>
+
+    /*    
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
@@ -23,15 +47,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'code-slash' : 'code-slash-outline'} color={color} />
-          ),
-        }}
-      />
     </Tabs>
+    */
   );
 }
