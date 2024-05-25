@@ -7,8 +7,8 @@ See [ifaceX Platform](https://products.autumo.ch/ifacex/overview).
 ## iOS & Android
 Android | iOS
 :--------:|:--------:
-![](https://raw.githubusercontent.com/autumoswitzerland/ifaceX-App/master/assets/doc/a1.png) | ![](https://raw.githubusercontent.com/autumoswitzerland/ifaceX-App/master/assets/doc/a1.png)
-![](https://raw.githubusercontent.com/autumoswitzerland/ifaceX-App/master/assets/doc/a1.png) | ![](https://raw.githubusercontent.com/autumoswitzerland/ifaceX-App/master/assets/doc/a1.png)
+![](https://raw.githubusercontent.com/autumoswitzerland/ifaceX-App/master/assets/doc/a1.png) | ![](https://raw.githubusercontent.com/autumoswitzerland/ifaceX-App/master/assets/doc/i1.png)
+![](https://raw.githubusercontent.com/autumoswitzerland/ifaceX-App/master/assets/doc/a2.png) | ![](https://raw.githubusercontent.com/autumoswitzerland/ifaceX-App/master/assets/doc/i2.png)
 
 ## Get started (Development)
 
