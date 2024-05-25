@@ -4,7 +4,13 @@ This mobile app is optional for customers who want to use an app that connects t
 
 See [ifaceX Platform](https://products.autumo.ch/ifacex/overview).
 
-## Get started
+## iOS & Android
+Android | iOS
+:--------:|:--------:
+![](https://raw.githubusercontent.com/autumoswitzerland/ifaceX-App/master/assets/doc/a1.png) | ![](https://raw.githubusercontent.com/autumoswitzerland/ifaceX-App/master/assets/doc/a1.png)
+![](https://raw.githubusercontent.com/autumoswitzerland/ifaceX-App/master/assets/doc/a1.png) | ![](https://raw.githubusercontent.com/autumoswitzerland/ifaceX-App/master/assets/doc/a1.png)
+
+## Get started (Development)
 
 1. Install dependencies
 
