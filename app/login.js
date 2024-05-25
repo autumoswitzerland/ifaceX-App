@@ -12,54 +12,70 @@
  * from autumo GmbH.
  *
  */
- 
-import React, { useState } from 'react';
-import { Alert, View, Text, TextInput, TouchableOpacity, Modal, Button, Image, StyleSheet } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const LoginScreen = ({ navigation }) => {
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Modal,
+  Image,
+  StyleSheet,
+  StatusBar,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-  const [url, setUrl] = useState('');
-  const [apiKey, setApiKey] = useState('');
+const LoginScreen = () => {
+  const navigation = useNavigation();
+
+  const [url, setUrl] = useState("");
+  const [apiKey, setApiKey] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isUrlInputFocused, setIsUrlInputFocused] = useState(false);
   const [isApiKeyInputFocused, setIsApiKeyInputFocused] = useState(false);
   const [timeoutOccurred, setTimeoutOccurred] = useState(false);
 
   const handleLogin = async () => {
-
-    const timeoutInMs = 3000;
+    const connTimeout = 3000;
 
     if (!url || !apiKey) {
-      //Alert.alert('Error', 'Please enter both URL and API Key');
-      setError('Please enter both URL and API Key');
+      setError("Please enter both URL and API Key");
       return;
     }
 
     setLoading(true);
-    setError('');
+    setError("");
     setTimeoutOccurred(false); // Reset timeoutOccurred
     let timeout;
 
     try {
+      setUrl(url.trim());
+      setApiKey(apiKey.trim());
+
+      if (url.endsWith("/") == false) {
+        setUrl(url.concat("/"));
+      }
+
       const fullUrl = `${url}/tasks/index.json?apiKey=${apiKey}`;
-      //console.log('Request URL:', fullUrl); // Debugging
+      //console.log("Request URL:", fullUrl); // Debugging
 
       timeout = setTimeout(() => {
-            clearTimeout(timeout);
-            setTimeoutOccurred(true);
-        }, timeoutInMs); // Set timeout duration to 3 seconds
+        clearTimeout(timeout);
+        setTimeoutOccurred(true);
+      }, connTimeout); // Set timeout
 
       // Fetch with custom timeout using Promise.race
       const timeoutPromise = new Promise((resolve, reject) => {
-        setTimeout(() => reject(new Error('Request timed out!')), timeoutInMs); // Set timeout duration (e.g., 3000 ms)
+        setTimeout(() => reject(new Error("Request timed out!")), connTimeout);
       });
 
       const fetchPromise = fetch(fullUrl, {
-        mode: 'no-cors',
+        mode: "no-cors",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
@@ -72,37 +88,38 @@ const LoginScreen = ({ navigation }) => {
       const data = await response.json();
       //console.log('Response Data:', data); // Debugging
 
-      await AsyncStorage.setItem('url', url);
-      await AsyncStorage.setItem('apiKey', apiKey);
+      await AsyncStorage.setItem("url", url);
+      await AsyncStorage.setItem("apiKey", apiKey);
 
-      //console.log('Navigating to Main'); // Debugging log
-
-      //navigation.navigate('Main')
-      navigation.replace('main');
-
+      navigation.replace("main");
     } catch (error) {
       //console.error('Network error:', error.message);
       //Alert.alert('Error', `Network request failed: ${error.message}`);
       setError(`Network request failed: ${error.message}`);
     } finally {
-        try {
-              setLoading(false); // Set loading to false after network request completes (whether successful or not)
-              if (timeout) {
-                   clearTimeout(timeout); // Clear the timeout if the request completes before the timeout duration
-                 }
-            setTimeoutOccurred(false); // Reset timeoutOccurred when request completes
-            } catch (error) {
-              console.error('Error in finally block:', error.message);
-            }
+      try {
+        setLoading(false); // Set loading to false after network request completes (whether successful or not)
+        if (timeout) {
+          clearTimeout(timeout); // Clear the timeout if the request completes before the timeout duration
+        }
+        setTimeoutOccurred(false); // Reset timeoutOccurred when request completes
+      } catch (error) {
+        console.error("Error in finally block:", error.message);
+      }
     }
   };
 
   return (
     <View style={styles.container} screenOptions={{ headerShown: false }}>
-      <Image source={require('../assets/images/ifaceX.png')} style={styles.image} />
+      <StatusBar barStyle="light-content" />
+      <Image
+        source={require("../assets/images/ifaceX.png")}
+        style={styles.image}
+      />
       <TextInput
         style={[styles.input, isUrlInputFocused && styles.inputFocused]}
         placeholder="Website URL + Port"
+        placeholderTextColor="#aaa"
         value={url}
         onChangeText={setUrl}
         onFocus={() => setIsUrlInputFocused(true)}
@@ -112,6 +129,7 @@ const LoginScreen = ({ navigation }) => {
       <TextInput
         style={[styles.input, isApiKeyInputFocused && styles.inputFocused]}
         placeholder="API Key"
+        placeholderTextColor="#aaa"
         value={apiKey}
         onChangeText={setApiKey}
         onFocus={() => setIsApiKeyInputFocused(true)}
@@ -119,9 +137,13 @@ const LoginScreen = ({ navigation }) => {
         autoCapitalize="none"
       />
       <TouchableOpacity
-        style={[styles.button, (loading || timeoutOccurred) && styles.disabledButton]}
+        style={[
+          styles.button,
+          (loading || timeoutOccurred) && styles.disabledButton,
+        ]}
         onPress={handleLogin}
-        disabled={loading || timeoutOccurred}>
+        disabled={loading || timeoutOccurred}
+      >
         {!loading && <Text style={styles.buttonText}>Login</Text>}
         {loading && <Text style={styles.loadingText}>Loading...</Text>}
       </TouchableOpacity>
@@ -130,7 +152,10 @@ const LoginScreen = ({ navigation }) => {
           <View style={styles.modalContent}>
             <Text style={styles.errorTitle}>Error</Text>
             <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={() => setError('')} style={styles.closeButton}>
+            <TouchableOpacity
+              onPress={() => setError("")}
+              style={styles.closeButton}
+            >
               <Text style={styles.closeButtonText}>Ok</Text>
             </TouchableOpacity>
           </View>
@@ -143,9 +168,9 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#111111',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#111111",
   },
   image: {
     width: 200, // Set the width of the image
@@ -154,36 +179,36 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    color: '#fff',
+    color: "#fff",
     marginBottom: 20,
   },
   input: {
-    width: '80%',
+    width: "80%",
     padding: 10,
     marginVertical: 10,
-    color: '#ddd',
-    backgroundColor: '#666666',
+    color: "#ddd",
+    backgroundColor: "#666666",
     borderRadius: 10, // Rounded edges for text input
   },
   inputFocused: {
     borderWidth: 1,
-    borderColor: '#2DC7FE', // Border color when input is focused
+    borderColor: "#2DC7FE", // Border color when input is focused
   },
   button: {
     marginTop: 20,
-    width: '80%',
-    backgroundColor: '#07b',
+    width: "80%",
+    backgroundColor: "#07b",
     padding: 10,
     borderRadius: 10, // Rounded edges for button
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
   },
   loadingText: {
-    color: '#ffcc00',
+    color: "#b70",
     fontSize: 18,
   },
   disabledButton: {
@@ -191,37 +216,37 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
   },
   modalContent: {
-    backgroundColor: '#222222',
+    backgroundColor: "#222222",
     padding: 20,
     borderRadius: 10,
-    textAlign: 'left',
+    textAlign: "left",
   },
   errorTitle: {
     fontSize: 18,
-    color: 'red',
+    color: "red",
     marginBottom: 10,
-    textAlign: 'left',
-    fontWeight: 'bold',
+    textAlign: "left",
+    fontWeight: "bold",
   },
   errorText: {
-    color: 'white',
+    color: "white",
     marginBottom: 10,
-    textAlign: 'left',
+    textAlign: "left",
   },
   closeButton: {
     marginTop: 10,
-    backgroundColor: '#07b',
+    backgroundColor: "#07b",
     padding: 10,
     borderRadius: 5,
-    alignItems: 'center',
+    alignItems: "center",
   },
   closeButtonText: {
-    color: '#fff',
+    color: "#fff",
   },
 });
 

@@ -13,30 +13,28 @@
  *
  */
 
-
-import React, { useEffect, useState } from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import LoginScreen from '../login';
-import MainScreen from '../main';
+import React, { useEffect, useState } from "react";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import LoginScreen from "../login";
+import MainScreen from "../main";
 
 const Stack = createNativeStackNavigator();
 
 const TabsNavigator = () => {
-
-  const [initialRouteName, setInitialRouteName] = useState('login');
+  const [initialRouteName, setInitialRouteName] = useState("login");
 
   useEffect(() => {
     const checkLogin = async () => {
-      const url = await AsyncStorage.getItem('url');
-      const apiKey = await AsyncStorage.getItem('apiKey');
+      const url = await AsyncStorage.getItem("url");
+      const apiKey = await AsyncStorage.getItem("apiKey");
 
       //console.log('Values read from DB ->');
       //console.log('URL:', url);
       //console.log('API Key:', apiKey);
 
       if (url && apiKey) {
-        setInitialRouteName('main');
+        setInitialRouteName("main");
       }
     };
     checkLogin();
@@ -44,8 +42,20 @@ const TabsNavigator = () => {
 
   return (
     <Stack.Navigator initialRouteName={initialRouteName}>
-      {initialRouteName == 'login' && <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />}
-      {initialRouteName == 'main' && <Stack.Screen name="Main" component={MainScreen} options={{ headerShown: false }} />}
+      {initialRouteName == "login" && (
+        <Stack.Screen
+          name="login"
+          component={LoginScreen}
+          options={{ headerShown: false }}
+        />
+      )}
+      {initialRouteName == "main" && (
+        <Stack.Screen
+          name="main"
+          component={MainScreen}
+          options={{ headerShown: false }}
+        />
+      )}
     </Stack.Navigator>
   );
 };

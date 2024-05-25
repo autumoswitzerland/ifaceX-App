@@ -14,13 +14,9 @@
  */
 
 
-import { Tabs } from 'expo-router';
 import React from 'react';
-import { View, Text } from "react-native";
 import { Stack } from 'expo-router';
 
-import { TabBarIcon } from '@/components/navigation/TabBarIcon';
-import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
