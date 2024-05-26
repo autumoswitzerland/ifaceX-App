@@ -25,7 +25,8 @@ import {
   StatusBar,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import Keychain from 'react-native-keychain';
+//import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -39,27 +40,32 @@ const LoginScreen = () => {
   const [timeoutOccurred, setTimeoutOccurred] = useState(false);
 
   const handleLogin = async () => {
-    const connTimeout = 3000;
 
-    if (!url || !apiKey) {
-      setError("Please enter both URL and API Key");
-      return;
-    }
+    const connTimeout = 3000;
 
     setLoading(true);
     setError("");
     setTimeoutOccurred(false); // Reset timeoutOccurred
+
     let timeout;
 
     try {
-      setUrl(url.trim());
-      setApiKey(apiKey.trim());
 
-      if (url.endsWith("/") == false) {
-        setUrl(url.concat("/"));
+      let modUrl = url.trim();
+      if (!modUrl.startsWith('http://') && !modUrl.startsWith('https://')) {
+        modUrl = 'http://' + modUrl;
       }
+      if (!modUrl.endsWith('/')) {
+        modUrl = modUrl + '/';
+      }      
+      let modApiKey = apiKey.trim();
 
-      const fullUrl = `${url}/tasks/index.json?apiKey=${apiKey}`;
+      if (!modUrl || !modApiKey) {
+        setError("Please enter both URL and API Key");
+        return;
+      }
+  
+      const fullUrl = `${modUrl}tasks/index.json?apiKey=${modApiKey}`;
       //console.log("Request URL:", fullUrl); // Debugging
 
       timeout = setTimeout(() => {
@@ -88,8 +94,12 @@ const LoginScreen = () => {
       const data = await response.json();
       //console.log('Response Data:', data); // Debugging
 
-      await AsyncStorage.setItem("url", url);
-      await AsyncStorage.setItem("apiKey", apiKey);
+      await Keychain.setGenericPassword(modUrl, modApiKey, {
+        accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
+        accessible: Keychain.ACCESSIBLE.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
+      });
+      //await AsyncStorage.setItem("url", url);
+      //await AsyncStorage.setItem("apiKey", apiKey);
 
       navigation.replace("main");
     } catch (error) {

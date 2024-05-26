@@ -27,10 +27,12 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Audio } from "expo-av";
 import Orientation from "react-native-orientation-locker";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+//import AsyncStorage from "@react-native-async-storage/async-storage";
+import Keychain from 'react-native-keychain';
 import FlashMessage from "./flash";
 
 const MainScreen = () => {
+  
   const navigation = useNavigation();
 
   const sound = useRef(new Audio.Sound());
@@ -102,8 +104,13 @@ const MainScreen = () => {
   const fetchData = async (init, manual) => {
     const connTimeout = 3000;
 
-    const url = await AsyncStorage.getItem("url");
-    const apiKey = await AsyncStorage.getItem("apiKey");
+    const credentials = await Keychain.getGenericPassword({
+      accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
+    });
+    const url = credentials.username;
+    const apiKey = credentials.password;
+    //const url = await AsyncStorage.getItem("url");
+    //const apiKey = await AsyncStorage.getItem("apiKey");
 
     setError("");
     setDetails([]);
@@ -124,7 +131,7 @@ const MainScreen = () => {
         setShowFlashMessage(true);
       }
 
-      const fullUrl = `${url}/tasks/index.json?apiKey=${apiKey}`;
+      const fullUrl = `${url}tasks/index.json?apiKey=${apiKey}`;
       // sort=id&direction=desc
       //console.log('Request:', fullUrl);
 
@@ -176,8 +183,9 @@ const MainScreen = () => {
   const handleLogout = async () => {
     try {
       clearInterval(intervalIdRef.current);
-      await AsyncStorage.removeItem("url");
-      await AsyncStorage.removeItem("apiKey");
+      //await AsyncStorage.removeItem("url");
+      //await AsyncStorage.removeItem("apiKey");
+      await Keychain.resetGenericPassword()
       navigation.replace("login");
     } catch (error) {
       //console.error('Error logging out', error);
