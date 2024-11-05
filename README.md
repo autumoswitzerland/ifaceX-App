@@ -1,6 +1,6 @@
 # Welcome to the ifaceX App 👋
 
-This mobile app is optional for customers who want to use an app that connects to the ifaceX platform for monitoring interface processors. It is not intended to be developed by the customer, but will be passed on to the stores (Apple & Google Play) if there is a need for such an app.
+This mobile app is optional for customers who want to use an app that connects to the ifaceX platform for monitoring interface processors. It is not intended to be built by the customer, but will be passed on to the stores (Apple & Google Play) if there is a need for such an app.
 
 See [ifaceX Platform](https://products.autumo.ch/ifacex/overview).
 
