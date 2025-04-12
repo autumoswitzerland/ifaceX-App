@@ -3,19 +3,31 @@
     "name": "ifaceX",
     "slug": "ifaceX",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "newArchEnabled": true,
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#222222"
     },
     "ios": {
+      "requireFullScreen": true,
       "supportsTablet": true,
-      "bundleIdentifier": "ch.autumo.ifaceX"
+      "bundleIdentifier": "ch.autumo.ifaceX",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "UISupportedInterfaceOrientations": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]      }
     },
     "android": {
       "package": "ch.autumo.ifaceX",
@@ -30,7 +42,9 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-font",
+      "expo-secure-store",
     ],
     "experiments": {
       "typedRoutes": true

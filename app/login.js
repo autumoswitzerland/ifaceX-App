@@ -1,5 +1,5 @@
 /**
- * Copyright 2024 autumo GmbH, Michael Gasche.
+ * Copyright 2025 autumo GmbH, Michael Gasche.
  * All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
@@ -13,20 +13,21 @@
  *
  */
 
+import * as SecureStore from 'expo-secure-store';
 import React, { useState } from "react";
 import {
   View,
   Text,
+  Keyboard,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   Modal,
   Image,
   StyleSheet,
   StatusBar,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import Keychain from 'react-native-keychain';
-//import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -40,86 +41,117 @@ const LoginScreen = () => {
   const [timeoutOccurred, setTimeoutOccurred] = useState(false);
 
   const handleLogin = async () => {
-
     const connTimeout = 3000;
-
     setLoading(true);
     setError("");
     setTimeoutOccurred(false); // Reset timeoutOccurred
-
     let timeout;
 
-    try {
+    //console.log("Starting login process...");
 
+    try {
       let modUrl = url.trim();
-      if (!modUrl.startsWith('http://') && !modUrl.startsWith('https://')) {
-        modUrl = 'http://' + modUrl;
-      }
-      if (!modUrl.endsWith('/')) {
-        modUrl = modUrl + '/';
-      }      
       let modApiKey = apiKey.trim();
+
+      //console.log("URL: ", modUrl);
+      //console.log("API Key: ", modApiKey);
 
       if (!modUrl || !modApiKey) {
         setError("Please enter both URL and API Key");
+        setLoading(false);  // Ensure the button is enabled
         return;
       }
-  
-      const fullUrl = `${modUrl}tasks/index.json?apiKey=${modApiKey}`;
-      //console.log("Request URL:", fullUrl); // Debugging
 
+      let fullUrl = `${modUrl}/tasks/index.json?apiKey=${modApiKey}`;
+      //console.log("Full URL: ", fullUrl);
+
+      // Set a timeout for the request
       timeout = setTimeout(() => {
-        clearTimeout(timeout);
         setTimeoutOccurred(true);
-      }, connTimeout); // Set timeout
+        //console.log("Timeout occurred");
+        setLoading(false); // Ensure loading is stopped
+      }, connTimeout);
 
-      // Fetch with custom timeout using Promise.race
-      const timeoutPromise = new Promise((resolve, reject) => {
-        setTimeout(() => reject(new Error("Request timed out!")), connTimeout);
-      });
+      const controller = new AbortController();
+      const timeoutAbort = setTimeout(() => controller.abort(), connTimeout);
+
+      //console.log("Sending fetch request...");
 
       const fetchPromise = fetch(fullUrl, {
+        signal: controller.signal,
         mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
 
-      const response = await Promise.race([fetchPromise, timeoutPromise]);
+      const response = await fetchPromise;
+      //console.log("Response received:", response);
+
+      clearTimeout(timeoutAbort); // Clear timeout on success
 
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        // Log the response status code and body for debugging purposes
+        const responseText = await response.text();
+        /*
+        console.error('Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: responseText
+        });
+        */
+
+        // TODO; remove 500; it's a beetRoot-server issue, corrected in beetRoot 3.1.4
+        // Handle authentication issues (401, 403, 500)
+        const isAuthIssue = response.status === 401 || response.status === 403 || response.status === 500;
+        setError(
+          isAuthIssue
+            ? `Invalid API Key or URL. Please check your credentials.`
+            : `Unexpected error (Status: ${response.status}): ${response.statusText}. Please try again later.`
+        );
+        setLoading(false);
+        return;
       }
 
       const data = await response.json();
-      //console.log('Response Data:', data); // Debugging
+      //console.log('Response Data:', data);
 
-      await Keychain.setGenericPassword(modUrl, modApiKey, {
-        accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
-        accessible: Keychain.ACCESSIBLE.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
-      });
-      //await AsyncStorage.setItem("url", url);
-      //await AsyncStorage.setItem("apiKey", apiKey);
-
-      navigation.replace("main");
-    } catch (error) {
-      //console.error('Network error:', error.message);
-      //Alert.alert('Error', `Network request failed: ${error.message}`);
-      setError(`Network request failed: ${error.message}`);
-    } finally {
       try {
-        setLoading(false); // Set loading to false after network request completes (whether successful or not)
-        if (timeout) {
-          clearTimeout(timeout); // Clear the timeout if the request completes before the timeout duration
-        }
-        setTimeoutOccurred(false); // Reset timeoutOccurred when request completes
-      } catch (error) {
-        console.error("Error in finally block:", error.message);
+        // Reset the credentials before saving new ones
+        await SecureStore.deleteItemAsync('url');
+        await SecureStore.deleteItemAsync('apiKey');
+
+        // Save to SecureStore
+        await SecureStore.setItemAsync('url', modUrl);
+        await SecureStore.setItemAsync('apiKey', modApiKey);
+
+        //console.log("Credentials set successfully");
+
+        // Only navigate if SecureStore set was successful
+        navigation.replace("main");
+      } catch (secureStoreError) {
+        //console.error("SecureStore error:", secureStoreError);
+        setError("Error saving credentials. Please check your input.");
+        setLoading(false); // Ensure loading is stopped and button is enabled
       }
+
+    } catch (error) {
+      //console.error('Request error:', error.message);
+      if (timeoutOccurred) {
+        setError("Request timed out. Please try again.");
+      } else {
+        setError(`Network error: ${error.message}`);
+      }
+      setLoading(false); // Ensure loading is stopped after network request completes
+    } finally {
+      if (timeout) {
+        clearTimeout(timeout); // Clear timeout
+      }
+      setTimeoutOccurred(false); // Reset timeoutOccurred
+      //console.log("Finalizing request...");
     }
   };
 
   return (
+  <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
     <View style={styles.container} screenOptions={{ headerShown: false }}>
       <StatusBar barStyle="light-content" />
       <Image
@@ -172,6 +204,7 @@ const LoginScreen = () => {
         </View>
       </Modal>
     </View>
+  </TouchableWithoutFeedback>
   );
 };
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2024 autumo GmbH, Michael Gasche.
+ * Copyright 2025 autumo GmbH, Michael Gasche.
  * All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains

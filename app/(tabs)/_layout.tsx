@@ -1,5 +1,5 @@
 /**
- * Copyright 2024 autumo GmbH, Michael Gasche.
+ * Copyright 2025 autumo GmbH, Michael Gasche.
  * All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
@@ -28,7 +28,7 @@ export default function TabLayout() {
       <Stack.Screen name="index" options={{title: 'ifaceX'}} />
     </Stack>
 
-    /*    
+    /*
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
@@ -45,5 +45,6 @@ export default function TabLayout() {
       />
     </Tabs>
     */
+
   );
 }

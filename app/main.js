@@ -1,5 +1,5 @@
 /**
- * Copyright 2024 autumo GmbH, Michael Gasche.
+ * Copyright 2025 autumo GmbH, Michael Gasche.
  * All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
@@ -25,14 +25,13 @@ import {
   StatusBar,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { Audio } from "expo-av";
-import Orientation from "react-native-orientation-locker";
-//import AsyncStorage from "@react-native-async-storage/async-storage";
-import Keychain from 'react-native-keychain';
+import { Audio } from 'expo-av';
+import * as ScreenOrientation from 'expo-screen-orientation';
+import * as SecureStore from 'expo-secure-store';
 import FlashMessage from "./flash";
 
 const MainScreen = () => {
-  
+
   const navigation = useNavigation();
 
   const sound = useRef(new Audio.Sound());
@@ -45,6 +44,41 @@ const MainScreen = () => {
 
   const fetchInterval = 60000;
   const intervalIdRef = useRef(null);
+  const orientationListener = useRef(null); // Store the listener reference
+
+  useEffect(() => {
+    const lockOrientation = async () => {
+      try {
+        // Fixed for now!
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+        setOrientation("PORTRAIT");
+      } catch (e) {
+        console.warn("Failed to lock orientation:", e);
+      }
+    };
+
+    lockOrientation();
+
+    // Listen for orientation changes and update the state
+    const handleOrientationChange = async () => {
+      const currentOrientation = await ScreenOrientation.getOrientationAsync();
+      //console.log('Orientation change detected, current:', currentOrientation);
+      if (currentOrientation === ScreenOrientation.OrientationLock.PORTRAIT_UP) {
+        setOrientation("PORTRAIT");
+      } else {
+        setOrientation("LANDSCAPE");
+      }
+    };
+
+    orientationListener.current = ScreenOrientation.addOrientationChangeListener(handleOrientationChange);
+
+    // Clean up the listener on component unmount
+    return () => {
+      if (orientationListener.current) {
+        ScreenOrientation.removeOrientationChangeListener(orientationListener.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     loadSound(); // Load the audio file when the component mounts
@@ -56,23 +90,9 @@ const MainScreen = () => {
       fetchData(false, false); // Call fetchData function to fetch data immediately
     }, fetchInterval);
 
-    // TODO
-    Orientation.lockToPortrait();
-    //Orientation.unlockAllOrientations();
-    // Get the initial orientation
-    const initialOrientation = Orientation.getInitialOrientation();
-    //console.log('Initial orientation:', initialOrientation);
-    setOrientation(initialOrientation);
-    const handleOrientationChange = (newOrientation) => {
-      //console.log('Orientation changed to:', newOrientation);
-      setOrientation(newOrientation);
-    };
-    // Subscribe to orientation change events
-    Orientation.addOrientationListener(handleOrientationChange);
-
     return () => {
       clearInterval(intervalIdRef.current);
-      Orientation.removeOrientationListener(handleOrientationChange);
+      ScreenOrientation.removeOrientationChangeListener(orientationListener.current);
       // Unload the sound when the component unmounts
       if (sound.current) {
         sound.current.unloadAsync();
@@ -104,13 +124,8 @@ const MainScreen = () => {
   const fetchData = async (init, manual) => {
     const connTimeout = 3000;
 
-    const credentials = await Keychain.getGenericPassword({
-      accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY_OR_DEVICE_PASSCODE,
-    });
-    const url = credentials.username;
-    const apiKey = credentials.password;
-    //const url = await AsyncStorage.getItem("url");
-    //const apiKey = await AsyncStorage.getItem("apiKey");
+    const url = await SecureStore.getItemAsync('url');
+    const apiKey = await SecureStore.getItemAsync('apiKey');
 
     setError("");
     setDetails([]);
@@ -131,7 +146,7 @@ const MainScreen = () => {
         setShowFlashMessage(true);
       }
 
-      const fullUrl = `${url}tasks/index.json?apiKey=${apiKey}`;
+      const fullUrl = `${url}/tasks/index.json?apiKey=${apiKey}`;
       // sort=id&direction=desc
       //console.log('Request:', fullUrl);
 
@@ -183,9 +198,10 @@ const MainScreen = () => {
   const handleLogout = async () => {
     try {
       clearInterval(intervalIdRef.current);
-      //await AsyncStorage.removeItem("url");
-      //await AsyncStorage.removeItem("apiKey");
-      await Keychain.resetGenericPassword()
+
+      await SecureStore.deleteItemAsync('url');
+      await SecureStore.deleteItemAsync('apiKey');
+
       navigation.replace("login");
     } catch (error) {
       //console.error('Error logging out', error);
@@ -234,10 +250,7 @@ const MainScreen = () => {
           keyExtractor={(item) => item.id.toString()}
         />
       )}
-      {orientation === "PORTRAIT" && !loading && (
         <View style={styles.separator} />
-      )}
-      {orientation === "PORTRAIT" && !loading && (
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.reloadButton} onPress={handleReload}>
             <Text style={styles.buttonText}>Reload</Text>
@@ -246,7 +259,6 @@ const MainScreen = () => {
             <Text style={styles.buttonText}>Logout</Text>
           </TouchableOpacity>
         </View>
-      )}
       <Modal visible={!!error} transparent>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -357,6 +369,7 @@ const styles = StyleSheet.create({
     width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
+    zIndex: 1, // Ensure it stays above other elements
   },
   reloadButton: {
     width: "48%",
@@ -373,10 +386,6 @@ const styles = StyleSheet.create({
     borderRadius: 10, // Rounded edges for button
     justifyContent: "center",
     alignItems: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
   },
   buttonText: {
     color: "#fff",
@@ -454,3 +463,19 @@ const styles = StyleSheet.create({
 });
 
 export default MainScreen;
+
+/*
+{orientation === "PORTRAIT" && !loading && (
+  <View style={styles.separator} />
+)}
+{orientation === "PORTRAIT" && !loading && (
+  <View style={styles.buttonContainer}>
+    <TouchableOpacity style={styles.reloadButton} onPress={handleReload}>
+      <Text style={styles.buttonText}>Reload</Text>
+    </TouchableOpacity>
+    <TouchableOpacity style={styles.button} onPress={handleLogout}>
+      <Text style={styles.buttonText}>Logout</Text>
+    </TouchableOpacity>
+  </View>
+)}
+*/

@@ -14,11 +14,8 @@
  */
 
 
-import React from 'react';
-import Navigator from './app/(tabs)/index';
+import { AppRegistry } from 'react-native';
+import App from './App'; // Ensure this points to the App component
+import { name as appName } from './app.json'; // The app name from app.json
 
-export default function App() {
-  return (
-    <Navigator />
-  );
-}
+AppRegistry.registerComponent(appName, () => App);
