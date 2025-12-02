@@ -23,7 +23,7 @@ import { ScrollView } from "react-native-gesture-handler";
 
 const { height } = Dimensions.get("window");
 
-const CustomScrollBar = ({ children }) => {
+export default function CustomList() {
   const scrollIndicator = useRef(new Animated.Value(0)).current;
   const scrollViewHeight = height * 0.8;
   const contentHeight = React.Children.count(children) * 100; // Adjust 100 based on item height
@@ -66,6 +66,7 @@ const CustomScrollBar = ({ children }) => {
       />
     </View>
   );
+  return <View />;
 };
 
 const styles = StyleSheet.create({
@@ -84,5 +85,3 @@ const styles = StyleSheet.create({
     right: 2,
   },
 });
-
-export default CustomScrollBar;
