@@ -20,9 +20,9 @@ Android | iOS
 
 2. Start the app
 
-This project has been migrated to the Expo Bare / Prebuild workflow. Because of this, the classic development workflow using `npx expo start` with Expo Go no longer works. Expo Go can only run pure managed projects that rely exclusively on the modules bundled inside the Expo Go client.
-
-To run the app locally, use:
+   This project has been migrated to the Expo Bare / Prebuild workflow. Because of this, the classic development workflow using `npx expo start` with Expo Go no longer works. Expo Go can only run pure managed projects that rely exclusively on the modules bundled inside the Expo Go client.
+   
+   To run the app locally, use:
 
    ```bash
    npx expo run:android
